@@ -11,6 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "raspi-sensors": "latest",
-    "ds18x20": "latest"    
+    "ds18x20": "latest",
+    "colors": "latest",
+    "config": "latest",
+    "mqtt": "~0.3.13"
   }
 }

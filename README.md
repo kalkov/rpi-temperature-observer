@@ -1,4 +1,4 @@
-### basement observer
+# basement observer
 
 RPI2 with TLS2561 light sensor connected via i2c, 3 lines for DHT22 sensors and a DS1820 1-wire line for multiple sensors.
 
@@ -20,12 +20,12 @@ It fetches the sensors data and publishes to an MQTT topic the following payload
 
 ## Schema
 ![schema](basement_observer.png)
+![schema](rpi.png)
 
 ## Prerequisites
-
-    * node.js >= 8
-    * [raspi-sensors](https://github.com/Vuzi/raspi-sensors)
-    * [ds18x20](https://github.com/mraxus/ds18x20.js)
+  - node.js >= 8
+  - [raspi-sensors](https://github.com/Vuzi/raspi-sensors)
+  - [ds18x20](https://github.com/mraxus/ds18x20.js)
 
 ## Install
 

@@ -10,10 +10,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "raspi-sensors": "latest",
-    "ds18x20": "latest",
     "colors": "latest",
     "config": "latest",
-    "mqtt": "~0.3.13"
+    "ds18x20": "latest",
+    "mqtt": "~0.3.13",
+    "onoff": "^2.0.0",
+    "raspi-sensors": "latest"
   }
 }

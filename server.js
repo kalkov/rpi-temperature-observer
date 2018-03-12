@@ -3,6 +3,7 @@ const mqtt = require('mqtt')
 const config = require('config')
 const ds1820 = require('ds18x20');
 const raspiSensors = require('raspi-sensors');
+const Gpio = require('onoff').Gpio
 
 const dht22_0 = new raspiSensors.Sensor({type: "DHT22", pin: 0X0}, "dht22_0");
 const dht22_1 = new raspiSensors.Sensor({type: "DHT22", pin: 0X1}, "dht22_1");
@@ -10,6 +11,7 @@ const dht22_2 = new raspiSensors.Sensor({type: "DHT22", pin: 0X2}, "dht22_2");
 
 const light_sensor = new raspiSensors.Sensor({type: "TSL2561", address: 0X39}, "light_sensor");
 
+const led = new Gpio(22, 'out')
 const username = config.get('username')
 const token = config.get('token')
 const mqtt_url = config.get('mqtt_url')
@@ -87,6 +89,7 @@ const fetchAndPublish = () => {
   Promise.
     all([fetchHumiditySensor(dht22_0), fetchHumiditySensor(dht22_1), fetchHumiditySensor(dht22_2), fetchLightSensor(), fetchTemperatureSensors()]).
     then(results => { 
+      led.writeSync(1)
       const sensors = results.reduce((a, b) => a.concat(b), []).filter((result) => result)
       const payload = {device_name: device, sensors: sensors}
       const time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
@@ -94,6 +97,7 @@ const fetchAndPublish = () => {
       console.log(`[${time}] Publishing to ${topic}: `.yellow + JSON.stringify(payload))
       
       client.publish(topic, JSON.stringify(payload))
+      led.writeSync(0)
     }).
     catch(error => console.error(error))
 }

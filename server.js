@@ -11,13 +11,26 @@ const dht22_2 = new raspiSensors.Sensor({type: "DHT22", pin: 0X2}, "dht22_2");
 
 const light_sensor = new raspiSensors.Sensor({type: "TSL2561", address: 0X39}, "light_sensor");
 
-const led = new Gpio(22, 'out')
+const statusLed = new Gpio(22, 'out')
+const connectedLed = new Gpio(23, 'out')
+
+const relay_0 = new Gpio(26, 'out')
+const relay_1 = new Gpio(20, 'out')
+const relay_2 = new Gpio(21, 'out')
+const relays = [relay_0, relay_1, relay_2]
+
 const username = config.get('username')
 const token = config.get('token')
 const mqtt_url = config.get('mqtt_url')
 const device = config.get('device')
 const clientId = `${username}/${device}`
-const topic = 'api/v1/sensors'
+
+const deviceTopic = `devices/${device}`
+const measurementsTopic = `${deviceTopic}/measurements`
+const statusTopic = `${deviceTopic}/status`
+const eventTopic = `${deviceTopic}/event`
+const commandTopic = `${deviceTopic}/command`
+
 const publishInterval = 7000
 
 const options = {clientId: clientId, username: username, password: token}
@@ -29,10 +42,24 @@ const dhtNames = {
   dht22_2: {Temperature: 'dht22_2_temp', Humidity: 'dht22_2_hum'}
 }
 
-console.log(`Connecting to: ${mqtt_url} with {username: ${username}, token: ${token}}`.yellow)
+console.log(`${currentTime()} Connecting to: ${mqtt_url} as ${username}`.yellow)
 
-client.on('connect', () => console.log(`Connected to: ${mqtt_url}`.green))
-client.on('error', error => console.error(error))
+client.on('connect', () => {
+  console.log(`${currentTime()} Connected to: ${mqtt_url}`.green)
+  connectedLed.writeSync(1)
+})
+
+client.on('disconnect', () => {
+  console.log(`${currentTime()} Disconnected from: ${mqtt_url}`.red)
+  connectedLed.writeSync(0)
+})
+
+client.on('error', error => {
+  console.error(`${currentTime()} ${error}`)
+  connectedLed.writeSync(0)
+})
+
+client.subscribe(commandTopic)
 
 function fetchLightSensor() { 
   return new Promise((resolve, reject) => {   
@@ -85,22 +112,47 @@ function fetchTemperatureSensors() {
   })
 }
 
+function currentTime() {
+  return `[${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')}]`
+}
+
+function executeCommand(command) {
+  if(command.type === 'change_device') {
+    let oldState = relays[command.device].readSync()
+
+    relays[command.device].writeSync(command.state)
+    
+    let newState = relays[command.device].readSync()
+
+    console.log(`${currentTime()} Current state of relay_${command.device} is ${newState}`.cyan)
+    
+    let eventPayload = JSON.stringify({type: 'change_device', device: command.device, new_state: newState, old_state: oldState})
+    console.log(`${currentTime()} Publishing to ${eventTopic}: `.yellow + eventPayload)
+    client.publish(eventTopic, eventPayload)
+  }
+}
+
 const fetchAndPublish = () => {
   Promise.
     all([fetchHumiditySensor(dht22_0), fetchHumiditySensor(dht22_1), fetchHumiditySensor(dht22_2), fetchLightSensor(), fetchTemperatureSensors()]).
     then(results => { 
-      led.writeSync(1)
+      statusLed.writeSync(1)
+      
       const sensors = results.reduce((a, b) => a.concat(b), []).filter((result) => result)
-      const payload = {device_name: device, sensors: sensors}
-      const time = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')
+      const measurementsPayload = JSON.stringify({sensors: sensors}) 
+      console.log(`${currentTime()} Publishing to ${measurementsTopic}: `.yellow + measurementsPayload)
       
-      console.log(`[${time}] Publishing to ${topic}: `.yellow + JSON.stringify(payload))
-      
-      client.publish(topic, JSON.stringify(payload))
-      led.writeSync(0)
+      client.publish(measurementsTopic, measurementsPayload)
+      statusLed.writeSync(0)
     }).
     catch(error => console.error(error))
 }
 
+client.on('message', (topic, message) => {
+  console.log(`${currentTime()} Received command: ${message}`.magenta)
+  let command = JSON.parse(message.toString())
+  executeCommand(command)
+})
+	
 setInterval(() => fetchAndPublish(), publishInterval)
 

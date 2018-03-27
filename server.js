@@ -31,7 +31,7 @@ const statusTopic = `${deviceTopic}/status`
 const eventTopic = `${deviceTopic}/event`
 const commandTopic = `${deviceTopic}/command`
 
-const publishInterval = 7000
+const publishInterval = 30000
 
 const options = {clientId: clientId, username: username, password: token}
 const client = mqtt.connect(mqtt_url, options)
@@ -112,6 +112,16 @@ function fetchTemperatureSensors() {
   })
 }
 
+function fetchRelayState(relayNumber) {
+  return new Promise((resolve, reject) => {
+    relays[relayNumber].read((err, data) => {
+      if(err) return reject(err)
+      
+      resolve({name: `relay_${relayNumber}`, data: data})
+    })
+  })
+}  
+
 function currentTime() {
   return `[${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')}]`
 }
@@ -134,7 +144,14 @@ function executeCommand(command) {
 
 const fetchAndPublish = () => {
   Promise.
-    all([fetchHumiditySensor(dht22_0), fetchHumiditySensor(dht22_1), fetchHumiditySensor(dht22_2), fetchLightSensor(), fetchTemperatureSensors()]).
+    all([fetchHumiditySensor(dht22_0), 
+	 fetchHumiditySensor(dht22_1), 
+	 fetchHumiditySensor(dht22_2), 
+	 fetchLightSensor(), 
+	 fetchTemperatureSensors(),
+         fetchRelayState(0),
+         fetchRelayState(1),
+         fetchRelayState(2)]).
     then(results => { 
       statusLed.writeSync(1)
       

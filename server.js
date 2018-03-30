@@ -126,7 +126,25 @@ function currentTime() {
   return `[${new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '')}]`
 }
 
-function executeCommand(command) {
+function changeRelayState(relayNumber, state) {
+    let relay = relays[relay]
+    let oldState = relay.readSync()
+
+    relay.writeSync(state)
+    
+    let newState = relay.readSync()
+
+    console.log(`${currentTime()} Current state of relay_${relay} is ${newState}`.cyan)
+    
+    let eventPayload = JSON.stringify({type: 'command', device: `relay${relay}`, new_state: newState, old_state: oldState})
+    console.log(`${currentTime()} Publishing to ${eventTopic}: `.yellow + eventPayload)
+    client.publish(eventTopic, eventPayload)
+}
+
+function executeCommand(receiver, command) {
+  switch(receiver){
+    case 'relay0':
+  }
   if(command.type === 'change_device') {
     let oldState = relays[command.device].readSync()
 
@@ -166,6 +184,14 @@ const fetchAndPublish = () => {
 }
 
 client.on('message', (topic, message) => {
+  console.log(topic)
+  let topicSplit = topic.split("/")
+  console.log(topicSplit)
+  let newCommand = topicSplit[topicSplit.length-1]
+  let receiver = topicSplit[topicSplit.length-2]
+  
+  console.log(`${receiver} will receive command: ${newCommand}`)
+
   console.log(`${currentTime()} Received command: ${message}`.magenta)
   let command = JSON.parse(message.toString())
   executeCommand(command)

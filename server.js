@@ -20,7 +20,7 @@ const relay_2 = new Gpio(21, 'out')
 const relays = [relay_0, relay_1, relay_2]
 
 const username = config.get('username')
-const token = config.get('token')
+const password = config.get('password')
 const mqtt_url = config.get('mqtt_url')
 const device = config.get('device')
 const clientId = `${username}/${device}`
@@ -33,7 +33,7 @@ const commandTopic = `${deviceTopic}/command`
 
 const publishInterval = 30000
 
-const options = {clientId: clientId, username: username, password: token}
+const options = {clientId: clientId, username: username, password: password}
 const client = mqtt.connect(mqtt_url, options)
 
 const dhtNames = {

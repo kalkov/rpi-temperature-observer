@@ -49,17 +49,35 @@ client.on('connect', () => {
   connectedLed.writeSync(1)
 })
 
-client.on('disconnect', () => {
+client.on('offline', () => {
   console.log(`${currentTime()} Disconnected from: ${mqtt_url}`.red)
-  connectedLed.writeSync(0)
+  setDefaultStates()
+})
+
+client.on('end', () => {
+  console.log(`${currentTime()} Connection ended from: ${mqtt_url}`.red)
+  setDefaultStates()
 })
 
 client.on('error', error => {
-  console.error(`${currentTime()} ${error}`)
-  connectedLed.writeSync(0)
+  console.log(`${currentTime()} Connection closed from: ${mqtt_url}`.red) 
+  console.error(`${currentTime()} ${error}`)	
+  setDefaultStates()
+})
+
+client.on('close', () => {
+  console.log(`${currentTime()} Connection closed from: ${mqtt_url}`.red)
+  setDefaultStates()
 })
 
 client.subscribe(commandTopic)
+
+function setDefaultStates(){
+  connectedLed.writeSync(0)
+  relays[0].writeSync(1)
+  relays[1].writeSync(1)
+  relays[2].writeSync(0)
+}
 
 function fetchLightSensor() { 
   return new Promise((resolve, reject) => {   

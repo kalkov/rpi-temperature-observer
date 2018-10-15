@@ -13,7 +13,7 @@
     "colors": "latest",
     "config": "latest",
     "ds18x20": "latest",
-    "mqtt": "~0.3.13",
+    "mqtt": "2.18.8",
     "onoff": "^2.0.0",
     "raspi-sensors": "latest"
   }

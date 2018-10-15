@@ -31,7 +31,7 @@ const statusTopic = `${deviceTopic}/status`
 const eventTopic = `${deviceTopic}/event`
 const commandTopic = `${deviceTopic}/command`
 
-const publishInterval = 30000
+const publishInterval = 120000
 
 const options = {clientId: clientId, username: username, password: password}
 const client = mqtt.connect(mqtt_url, options)

@@ -1,15 +1,12 @@
 require('colors')
 const mqtt = require('mqtt')
 const config = require('config')
-const ds1820 = require('ds18x20');
 const raspiSensors = require('raspi-sensors');
 const Gpio = require('onoff').Gpio
 
 const dht22_0 = new raspiSensors.Sensor({type: "DHT22", pin: 0X0}, "dht22_0");
 const dht22_1 = new raspiSensors.Sensor({type: "DHT22", pin: 0X1}, "dht22_1");
 const dht22_2 = new raspiSensors.Sensor({type: "DHT22", pin: 0X2}, "dht22_2");
-
-const light_sensor = new raspiSensors.Sensor({type: "TSL2561", address: 0X39}, "light_sensor");
 
 const statusLed = new Gpio(22, 'out')
 const connectedLed = new Gpio(23, 'out')
@@ -31,7 +28,7 @@ const statusTopic = `${deviceTopic}/status`
 const eventTopic = `${deviceTopic}/event`
 const commandTopic = `${deviceTopic}/command`
 
-const publishInterval = 120000
+const publishInterval = 60000
 
 const options = {clientId: clientId, username: username, password: password}
 const client = mqtt.connect(mqtt_url, options)
@@ -79,16 +76,6 @@ function setDefaultStates(){
   relays[2].writeSync(0)
 }
 
-function fetchLightSensor() { 
-  return new Promise((resolve, reject) => {   
-    light_sensor.fetch((err, data) => { 
-      if(err) return reject(err.cause)
- 
-      resolve({name: data.sensor_name, data: data.value})
-    })
-  })
-}
-
 function fetchHumiditySensor(dht) {
   return new Promise((resolve, reject) => {
     var oldValue
@@ -108,25 +95,6 @@ function fetchHumiditySensor(dht) {
 	resolve(null)
       }
     }) 
-  })
-}
-
-function fetchTemperatureSensors() { 
-  return new Promise((resolve, reject) => { 
-    ds1820.getAll((err, data) => {
-      if(err) return reject(err) 
-      
-      var sensorsData = 
-        Object.
-          keys(data).
-	  map((uuid, index) => { 
-            if(data[uuid] !== 85) {
-              return{name: `ds1820_${index}`, uuid: uuid, data: data[uuid]}
-            }
-	  })
-    
-      resolve(sensorsData)
-    })
   })
 }
 
@@ -165,8 +133,6 @@ const fetchAndPublish = () => {
     all([fetchHumiditySensor(dht22_0), 
 	 fetchHumiditySensor(dht22_1), 
 	 fetchHumiditySensor(dht22_2), 
-	 fetchLightSensor(), 
-	 fetchTemperatureSensors(),
          fetchRelayState(0),
          fetchRelayState(1),
          fetchRelayState(2)]).

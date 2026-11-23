@@ -23,7 +23,7 @@ It fetches the sensors data and publishes to an MQTT topic the following payload
 ![schema](rpi.png)
 
 ## Prerequisites
-  - node.js >= 8
+  - Node.js >= 18.2
   - [raspi-sensors](https://github.com/Vuzi/raspi-sensors)
   - [ds18x20](https://github.com/mraxus/ds18x20.js)
 

@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "description": "",
   "main": "server.js",
+  "engines": {
+    "node": ">=18.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
@@ -11,9 +14,9 @@
   "license": "ISC",
   "dependencies": {
     "colors": "latest",
-    "config": "latest",
+    "config": "^3.3.12",
     "ds18x20": "latest",
-    "mqtt": "2.18.8",
+    "mqtt": "^5.16.1",
     "onoff": "^2.0.0",
     "raspi-sensors": "latest"
   }
